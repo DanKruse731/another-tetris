@@ -17,10 +17,12 @@ var inputDown = 0;
 var inputHardDrop = 0;
 var inputRotCW = 0;
 var inputRotCCW = 0;
+var inputHold = 0;
 
 //Gravity, DAS, Lock
 var gravityCounter = 0;
 var gravityLevel = 48;
+var gravitySkip = 1;
 
 var dasSensitivity = 10;
 var dasSpeed = 2;
@@ -33,9 +35,21 @@ var lockActions = 0;
 //Rotation
 rotState = 1;
 
+//NextPieces
+var nextPiece1 = 1;
+var nextPiece2 = 1;
+var nextPiece3 = 1;
+var nextPiece4 = 1;
+var nextPiece5 = 1;
+var nextArray = new Array(7);
+
+//Hold
+var holdPiece = 0;
+var holdLimit = 0;
+
 //Image
 var imageBlockSize = 24;
-var imageGridXPos = 20;
+var imageGridXPos = 160;
 var imageGridYPos = 10;
 
 //Text
@@ -50,6 +64,9 @@ var textGravityCounter;
 var textLockCounter;
 var textLockActions;
 var textRotState;
+var textNextQueue;
+var textHold;
+var textTutorial
 
 //-------------------------------------------
 class Sprint extends Phaser.Scene {
@@ -73,34 +90,92 @@ class Sprint extends Phaser.Scene {
             }
         }
 
+        nextArray = [1, 2, 3, 4, 5, 6, 7];
+        this.shuffle(nextArray);
+        nextPiece1 = nextArray[0];
+        nextArray.shift();
+        nextPiece2 = nextArray[0];
+        nextArray.shift();
+        nextPiece3 = nextArray[0];
+        nextArray.shift();
+        nextPiece4 = nextArray[0];
+        nextArray.shift();
+        nextPiece5 = nextArray[0];
+        nextArray.shift();
+
         this.initializePiece();
 
     }
 
-    initializePiece() {
+    shuffle(a) {
+        var j, x, i;
+        for (i = a.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            x = a[i];
+            a[i] = a[j];
+            a[j] = x;
+        }
+        return a;
+    }
 
-        block[0] = Math.floor(Math.random() * 7) + 1;
+    initializePiece() {
+        
+        if(inputHold == 1) {
+            if(holdPiece == 0) {
+                if(nextArray.length == 0) {
+                    nextArray = [1, 2, 3, 4, 5, 6, 7];
+                    this.shuffle(nextArray);
+                }
+                holdPiece = block[0];
+                block[0] = nextPiece1;
+                nextPiece1 = nextPiece2;
+                nextPiece2 = nextPiece3;
+                nextPiece3 = nextPiece4;
+                nextPiece4 = nextPiece5;
+                nextPiece5 = nextArray[0];
+                nextArray.shift();
+            } else {
+                let transfer = block[0];
+                block[0] = holdPiece;
+                holdPiece = transfer;
+            }
+            holdLimit = 1;
+        } else {
+            if(nextArray.length == 0) {
+                nextArray = [1, 2, 3, 4, 5, 6, 7];
+                this.shuffle(nextArray);
+            }
+            block[0] = nextPiece1;
+            nextPiece1 = nextPiece2;
+            nextPiece2 = nextPiece3;
+            nextPiece3 = nextPiece4;
+            nextPiece4 = nextPiece5;
+            nextPiece5 = nextArray[0];
+            nextArray.shift();
+        }
+
+        
 
         switch(block[0]) {
             case 1:
                 block[1] = 1;
-                block[2] = 4;
+                block[2] = 3;
                 block[3] = 1;
-                block[4] = 5;
+                block[4] = 4;
                 block[5] = 2;
-                block[6] = 5;
+                block[6] = 4;
                 block[7] = 2;
-                block[8] = 6;
+                block[8] = 5;
                 break;
             case 2:
                 block[1] = 2;
-                block[2] = 4;
+                block[2] = 3;
                 block[3] = 2;
-                block[4] = 5;
+                block[4] = 4;
                 block[5] = 2;
-                block[6] = 6;
+                block[6] = 5;
                 block[7] = 1;
-                block[8] = 6;
+                block[8] = 5;
                 break;
             case 3:
                 block[1] = 2;
@@ -114,13 +189,13 @@ class Sprint extends Phaser.Scene {
                 break;
             case 4:
                 block[1] = 2;
-                block[2] = 4;
+                block[2] = 3;
                 block[3] = 2;
-                block[4] = 5;
+                block[4] = 4;
                 block[5] = 1;
-                block[6] = 5;
+                block[6] = 4;
                 block[7] = 1;
-                block[8] = 6;
+                block[8] = 5;
                 break;
             case 5:
                 block[1] = 2;
@@ -134,23 +209,23 @@ class Sprint extends Phaser.Scene {
                 break;
             case 6:
                 block[1] = 1;
-                block[2] = 4;
+                block[2] = 3;
                 block[3] = 2;
-                block[4] = 4;
+                block[4] = 3;
                 block[5] = 2;
-                block[6] = 5;
+                block[6] = 4;
                 block[7] = 2;
-                block[8] = 6;
+                block[8] = 5;
                 break;
             case 7:
                 block[1] = 2;
-                block[2] = 4;
+                block[2] = 3;
                 block[3] = 2;
-                block[4] = 5;
+                block[4] = 4;
                 block[5] = 1;
-                block[6] = 5;
+                block[6] = 4;
                 block[7] = 2;
-                block[8] = 6;
+                block[8] = 5;
                 break;
         }
 
@@ -179,6 +254,12 @@ class Sprint extends Phaser.Scene {
 
     
     inputs() {
+
+        if(this.key_SHIFT.isDown) {
+            inputHold++;
+        } else {
+            inputHold = 0;
+        }
 
         if(this.key_LEFT.isDown && !this.key_RIGHT.isDown) {
             inputLeft++;
@@ -219,6 +300,11 @@ class Sprint extends Phaser.Scene {
     }
 
     execution() {
+
+        if(inputHold == 1 && holdLimit == 0) {
+            console.log(inputHold);
+            this.initializePiece();
+        }
         
         if(dasSpeed > 1) {
             if((inputLeft == 1) || ((inputLeft - dasSensitivity) % dasSpeed == 1)) {
@@ -374,12 +460,14 @@ class Sprint extends Phaser.Scene {
     }
 
     moveDown() {
-        if(block[1] < 22 && block[3] < 22 && block[5] < 22 && block[7] < 22) {
-            if(grid[block[1]+1][block[2]] == 0) {
-                block[1]++;
-                block[3]++;
-                block[5]++;
-                block[7]++;
+        for(let i = 0; i < gravitySkip; i++) {
+            if(block[1] < 22 && block[3] < 22 && block[5] < 22 && block[7] < 22) {
+                if(grid[block[1]+1][block[2]] == 0 && grid[block[3]+1][block[4]] == 0 && grid[block[5]+1][block[6]] == 0 && grid[block[7]+1][block[8]] == 0) {
+                    block[1]++;
+                    block[3]++;
+                    block[5]++;
+                    block[7]++;
+                }
             }
         }
     }
@@ -420,6 +508,666 @@ class Sprint extends Phaser.Scene {
         }
     }
 
+    superRotationCheckJLSZT(superRotTest, rotDir) {
+        switch(rotDir) {
+            case 1:
+                //Counter Clockwise
+                switch(rotState) {
+
+                    case 1:
+                        superRotTest[1]++;
+                        superRotTest[3]++;
+                        superRotTest[5]++;
+                        superRotTest[7]++;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 4);
+                        } else {
+                            superRotTest[0]--;
+                            superRotTest[2]--;
+                            superRotTest[4]--;
+                            superRotTest[6]--;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 4);
+                            } else {
+                                superRotTest[0] += 3;
+                                superRotTest[1]--;
+                                superRotTest[2] += 3;
+                                superRotTest[3]--;
+                                superRotTest[4] += 3;
+                                superRotTest[5]--;
+                                superRotTest[6] += 3;
+                                superRotTest[7]--;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 4);
+                                } else {
+                                    superRotTest[1]++;
+                                    superRotTest[3]++;
+                                    superRotTest[5]++;
+                                    superRotTest[7]++;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 4);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 2:
+                        superRotTest[1]++;
+                        superRotTest[3]++;
+                        superRotTest[5]++;
+                        superRotTest[7]++;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 1);
+                        } else {
+                            superRotTest[0]++;
+                            superRotTest[2]++;
+                            superRotTest[4]++;
+                            superRotTest[6]++;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 1);
+                            } else {
+                                superRotTest[0] -= 3;
+                                superRotTest[1]--;
+                                superRotTest[2] -= 3;
+                                superRotTest[3]--;
+                                superRotTest[4] -= 3;
+                                superRotTest[5]--;
+                                superRotTest[6] -= 3;
+                                superRotTest[7]--;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 1);
+                                } else {
+                                    superRotTest[1]++;
+                                    superRotTest[3]++;
+                                    superRotTest[5]++;
+                                    superRotTest[7]++;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 1);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 3:
+                        superRotTest[1]--;
+                        superRotTest[3]--;
+                        superRotTest[5]--;
+                        superRotTest[7]--;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 2);
+                        } else {
+                            superRotTest[0]--;
+                            superRotTest[2]--;
+                            superRotTest[4]--;
+                            superRotTest[6]--;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 2);
+                            } else {
+                                superRotTest[0] += 3;
+                                superRotTest[1]++;
+                                superRotTest[2] += 3;
+                                superRotTest[3]++;
+                                superRotTest[4] += 3;
+                                superRotTest[5]++;
+                                superRotTest[6] += 3;
+                                superRotTest[7]++;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 2);
+                                } else {
+                                    superRotTest[1]--;
+                                    superRotTest[3]--;
+                                    superRotTest[5]--;
+                                    superRotTest[7]--;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 2);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 4:
+                        superRotTest[1]--;
+                        superRotTest[3]--;
+                        superRotTest[5]--;
+                        superRotTest[7]--;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 3);
+                        } else {
+                            superRotTest[0]++;
+                            superRotTest[2]++;
+                            superRotTest[4]++;
+                            superRotTest[6]++;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 3);
+                            } else {
+                                superRotTest[0] -= 3;
+                                superRotTest[1]++;
+                                superRotTest[2] -= 3;
+                                superRotTest[3]++;
+                                superRotTest[4] -= 3;
+                                superRotTest[5]++;
+                                superRotTest[6] -= 3;
+                                superRotTest[7]++;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 3);
+                                } else {
+                                    superRotTest[1]--;
+                                    superRotTest[3]--;
+                                    superRotTest[5]--;
+                                    superRotTest[7]--;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 3);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+                break;
+            case 2:
+
+                //Clockwise
+                switch(rotState) {
+
+                    case 1:
+                        superRotTest[1]--;
+                        superRotTest[3]--;
+                        superRotTest[5]--;
+                        superRotTest[7]--;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 2);
+                        } else {
+                            superRotTest[0]--;
+                            superRotTest[2]--;
+                            superRotTest[4]--;
+                            superRotTest[6]--;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 2);
+                            } else {
+                                superRotTest[0] += 3;
+                                superRotTest[1]++;
+                                superRotTest[2] += 3;
+                                superRotTest[3]++;
+                                superRotTest[4] += 3;
+                                superRotTest[5]++;
+                                superRotTest[6] += 3;
+                                superRotTest[7]++;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 2);
+                                } else {
+                                    superRotTest[1]--;
+                                    superRotTest[3]--;
+                                    superRotTest[5]--;
+                                    superRotTest[7]--;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 2);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 2:
+                        superRotTest[1]++;
+                        superRotTest[3]++;
+                        superRotTest[5]++;
+                        superRotTest[7]++;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 3);
+                        } else {
+                            superRotTest[0]++;
+                            superRotTest[2]++;
+                            superRotTest[4]++;
+                            superRotTest[6]++;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 3);
+                            } else {
+                                superRotTest[0] -= 3;
+                                superRotTest[1]--;
+                                superRotTest[2] -= 3;
+                                superRotTest[3]--;
+                                superRotTest[4] -= 3;
+                                superRotTest[5]--;
+                                superRotTest[6] -= 3;
+                                superRotTest[7]--;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 3);
+                                } else {
+                                    superRotTest[1]++;
+                                    superRotTest[3]++;
+                                    superRotTest[5]++;
+                                    superRotTest[7]++;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 3);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 3:
+                        superRotTest[1]++;
+                        superRotTest[3]++;
+                        superRotTest[5]++;
+                        superRotTest[7]++;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 4);
+                        } else {
+                            superRotTest[0]--;
+                            superRotTest[2]--;
+                            superRotTest[4]--;
+                            superRotTest[6]--;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 4);
+                            } else {
+                                superRotTest[0] += 3;
+                                superRotTest[1]--;
+                                superRotTest[2] += 3;
+                                superRotTest[3]--;
+                                superRotTest[4] += 3;
+                                superRotTest[5]--;
+                                superRotTest[6] += 3;
+                                superRotTest[7]--;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 4);
+                                } else {
+                                    superRotTest[1]++;
+                                    superRotTest[3]++;
+                                    superRotTest[5]++;
+                                    superRotTest[7]++;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 4);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 4:
+                        superRotTest[1]--;
+                        superRotTest[3]--;
+                        superRotTest[5]--;
+                        superRotTest[7]--;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 1);
+                        } else {
+                            superRotTest[0]++;
+                            superRotTest[2]++;
+                            superRotTest[4]++;
+                            superRotTest[6]++;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 1);
+                            } else {
+                                superRotTest[0] -= 3;
+                                superRotTest[1]++;
+                                superRotTest[2] -= 3;
+                                superRotTest[3]++;
+                                superRotTest[4] -= 3;
+                                superRotTest[5]++;
+                                superRotTest[6] -= 3;
+                                superRotTest[7]++;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 1);
+                                } else {
+                                    superRotTest[1]--;
+                                    superRotTest[3]--;
+                                    superRotTest[5]--;
+                                    superRotTest[7]--;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 1);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+                break;
+        }
+    }
+
+    superRotationCheckI(superRotTest, rotDir) {
+        switch(rotDir) {
+            case 1:
+                //Counter Clockwise
+                switch(rotState) {
+
+                    case 1:
+                        superRotTest[1]--;
+                        superRotTest[3]--;
+                        superRotTest[5]--;
+                        superRotTest[7]--;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 4);
+                        } else {
+                            superRotTest[1] += 3;
+                            superRotTest[3] += 3;
+                            superRotTest[5] += 3;
+                            superRotTest[7] += 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 4);
+                            } else {
+                                superRotTest[0] -= 2;
+                                superRotTest[1] -= 3;
+                                superRotTest[2] -= 2;
+                                superRotTest[3] -= 3;
+                                superRotTest[4] -= 2;
+                                superRotTest[5] -= 3;
+                                superRotTest[6] -= 2;
+                                superRotTest[7] -= 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 4);
+                                } else {
+                                    superRotTest[0] += 3;
+                                    superRotTest[1] += 3;
+                                    superRotTest[2] += 3;
+                                    superRotTest[3] += 3;
+                                    superRotTest[4] += 3;
+                                    superRotTest[5] += 3;
+                                    superRotTest[6] += 3;
+                                    superRotTest[7] += 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 4);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 2:
+                        superRotTest[1] += 2;
+                        superRotTest[3] += 2;
+                        superRotTest[5] += 2;
+                        superRotTest[7] += 2;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 1);
+                        } else {
+                            superRotTest[1] -= 3;
+                            superRotTest[3] -= 3;
+                            superRotTest[5] -= 3;
+                            superRotTest[7] -= 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 1);
+                            } else {
+                                superRotTest[0]--;
+                                superRotTest[1] += 3;
+                                superRotTest[2]--;
+                                superRotTest[3] += 3;
+                                superRotTest[4]--;
+                                superRotTest[5] += 3;
+                                superRotTest[6]--;
+                                superRotTest[7] += 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 1);
+                                } else {
+                                    superRotTest[0] += 3;
+                                    superRotTest[1] -= 3;
+                                    superRotTest[2] += 3;
+                                    superRotTest[3] -= 3;
+                                    superRotTest[4] += 3;
+                                    superRotTest[5] -= 3;
+                                    superRotTest[6] += 3;
+                                    superRotTest[7] -= 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 1);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 3:
+                        superRotTest[1]++;
+                        superRotTest[3]++;
+                        superRotTest[5]++;
+                        superRotTest[7]++;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 2);
+                        } else {
+                            superRotTest[1] -= 3;
+                            superRotTest[3] -= 3;
+                            superRotTest[5] -= 3;
+                            superRotTest[7] -= 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 2);
+                            } else {
+                                superRotTest[0] += 2;
+                                superRotTest[1] += 3;
+                                superRotTest[2] += 2;
+                                superRotTest[3] += 3;
+                                superRotTest[4] += 2;
+                                superRotTest[5] += 3;
+                                superRotTest[6] += 2;
+                                superRotTest[7] += 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 2);
+                                } else {
+                                    superRotTest[0] -= 3;
+                                    superRotTest[1] -= 3;
+                                    superRotTest[2] -= 3;
+                                    superRotTest[3] -= 3;
+                                    superRotTest[4] -= 3;
+                                    superRotTest[5] -= 3;
+                                    superRotTest[6] -= 3;
+                                    superRotTest[7] -= 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 2);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 4:
+                        superRotTest[1] -= 2;
+                        superRotTest[3] -= 2;
+                        superRotTest[5] -= 2;
+                        superRotTest[7] -= 2;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 3);
+                        } else {
+                            superRotTest[1] += 3;
+                            superRotTest[3] += 3;
+                            superRotTest[5] += 3;
+                            superRotTest[7] += 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 3);
+                            } else {
+                                superRotTest[0]++;
+                                superRotTest[1] -= 3;
+                                superRotTest[2]++;
+                                superRotTest[3] -= 3;
+                                superRotTest[4]++;
+                                superRotTest[5] -= 3;
+                                superRotTest[6]++;
+                                superRotTest[7] -= 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 3);
+                                } else {
+                                    superRotTest[0] -= 3;
+                                    superRotTest[1] += 3;
+                                    superRotTest[2] -= 3;
+                                    superRotTest[3] += 3;
+                                    superRotTest[4] -= 3;
+                                    superRotTest[5] += 3;
+                                    superRotTest[6] -= 3;
+                                    superRotTest[7] += 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 3);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+                break;
+            case 2:
+
+                //Clockwise
+                switch(rotState) {
+
+                    case 1:
+                        superRotTest[1] -= 2;
+                        superRotTest[3] -= 2;
+                        superRotTest[5] -= 2;
+                        superRotTest[7] -= 2;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 2);
+                        } else {
+                            superRotTest[1] += 3;
+                            superRotTest[3] += 3;
+                            superRotTest[5] += 3;
+                            superRotTest[7] += 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 2);
+                            } else {
+                                superRotTest[0]++;
+                                superRotTest[1] -= 3;
+                                superRotTest[2]++;
+                                superRotTest[3] -= 3;
+                                superRotTest[4]++;
+                                superRotTest[5] -= 3;
+                                superRotTest[6]++;
+                                superRotTest[7] -= 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 2);
+                                } else {
+                                    superRotTest[0] -= 3;
+                                    superRotTest[1] += 3;
+                                    superRotTest[2] -= 3;
+                                    superRotTest[3] += 3;
+                                    superRotTest[4] -= 3;
+                                    superRotTest[5] += 3;
+                                    superRotTest[6] -= 3;
+                                    superRotTest[7] += 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 2);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 2:
+                        superRotTest[1]--;
+                        superRotTest[3]--;
+                        superRotTest[5]--;
+                        superRotTest[7]--;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 3);
+                        } else {
+                            superRotTest[1] += 3;
+                            superRotTest[3] += 3;
+                            superRotTest[5] += 3;
+                            superRotTest[7] += 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 3);
+                            } else {
+                                superRotTest[0] -= 2;
+                                superRotTest[1] -= 3;
+                                superRotTest[2] -= 2;
+                                superRotTest[3] -= 3;
+                                superRotTest[4] -= 2;
+                                superRotTest[5] -= 3;
+                                superRotTest[6] -= 2;
+                                superRotTest[7] -= 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 3);
+                                } else {
+                                    superRotTest[0] += 3;
+                                    superRotTest[1] += 3;
+                                    superRotTest[2] += 3;
+                                    superRotTest[3] += 3;
+                                    superRotTest[4] += 3;
+                                    superRotTest[5] += 3;
+                                    superRotTest[6] += 3;
+                                    superRotTest[7] += 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 3);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 3:
+                        superRotTest[1] += 2;
+                        superRotTest[3] += 2;
+                        superRotTest[5] += 2;
+                        superRotTest[7] += 2;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 4);
+                        } else {
+                            superRotTest[1] -= 3;
+                            superRotTest[3] -= 3;
+                            superRotTest[5] -= 3;
+                            superRotTest[7] -= 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 4);
+                            } else {
+                                superRotTest[0]--;
+                                superRotTest[1] += 3;
+                                superRotTest[2]--;
+                                superRotTest[3] += 3;
+                                superRotTest[4]--;
+                                superRotTest[5] += 3;
+                                superRotTest[6]--;
+                                superRotTest[7] += 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 4);
+                                } else {
+                                    superRotTest[0] += 3;
+                                    superRotTest[1] -= 3;
+                                    superRotTest[2] += 3;
+                                    superRotTest[3] -= 3;
+                                    superRotTest[4] += 3;
+                                    superRotTest[5] -= 3;
+                                    superRotTest[6] += 3;
+                                    superRotTest[7] -= 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 4);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 4:
+                        superRotTest[1]++;
+                        superRotTest[3]++;
+                        superRotTest[5]++;
+                        superRotTest[7]++;
+                        if(this.rotateCheck(superRotTest)) {
+                            this.rotateConfirm(superRotTest, 1);
+                        } else {
+                            superRotTest[1] -= 3;
+                            superRotTest[3] -= 3;
+                            superRotTest[5] -= 3;
+                            superRotTest[7] -= 3;
+                            if(this.rotateCheck(superRotTest)) {
+                                this.rotateConfirm(superRotTest, 1);
+                            } else {
+                                superRotTest[0] += 2;
+                                superRotTest[1] += 3;
+                                superRotTest[2] += 2;
+                                superRotTest[3] += 3;
+                                superRotTest[4] += 2;
+                                superRotTest[5] += 3;
+                                superRotTest[6] += 2;
+                                superRotTest[7] += 3;
+                                if(this.rotateCheck(superRotTest)) {
+                                    this.rotateConfirm(superRotTest, 1);
+                                } else {
+                                    superRotTest[0] -= 3;
+                                    superRotTest[1] -= 3;
+                                    superRotTest[2] -= 3;
+                                    superRotTest[3] -= 3;
+                                    superRotTest[4] -= 3;
+                                    superRotTest[5] -= 3;
+                                    superRotTest[6] -= 3;
+                                    superRotTest[7] -= 3;
+                                    if(this.rotateCheck(superRotTest)) {
+                                        this.rotateConfirm(superRotTest, 1);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+                break;
+        }
+    }
+
     rotateClockwise() {
         let rotateTest = new Array(8);
         switch(block[0]) {
@@ -429,24 +1177,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [0,2,1,1,0,0,1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        } else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 2:
                         rotateTest = [2,0,1,-1,0,0,-1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 3:
                         rotateTest = [0,-2,-1,-1,0,0,-1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 4:
                         rotateTest = [-2,0,-1,1,0,0,1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                 }
@@ -457,24 +1213,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [-1,1,0,0,1,-1,2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 2:
                         rotateTest = [1,1,0,0,-1,-1,0,-2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 3:
                         rotateTest = [1,-1,0,0,-1,1,-2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,-1,0,0,1,1,0,2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                 }
@@ -491,24 +1255,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [-1,1,0,0,1,1,2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 2:
                         rotateTest = [1,1,0,0,1,-1,0,-2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 3:
                         rotateTest = [1,-1,0,0,-1,-1,-2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,-1,0,0,-1,1,0,2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                 }
@@ -519,24 +1291,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [-1,2,0,1,1,0,2,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 2);
                         }
                         break;
                     case 2:
                         rotateTest = [2,1,1,0,0,-1,-1,-2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 2);
                         }
                         break;
                     case 3:
                         rotateTest = [1,-2,0,-1,-1,0,-2,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 2);
                         }
                         break;
                     case 4:
                         rotateTest = [-2,-1,-1,0,0,1,1,2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 2);
                         }
                         break;
                 }
@@ -547,24 +1327,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [0,2,-1,1,0,0,1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 2:
                         rotateTest = [2,0,1,1,0,0,-1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 3:
                         rotateTest = [0,-2,1,-1,0,0,-1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 4:
                         rotateTest = [-2,0,-1,-1,0,0,1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                 }
@@ -575,24 +1363,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [-1,1,0,0,1,1,1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 2:
                         rotateTest = [1,1,0,0,1,-1,-1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 3:
                         rotateTest = [1,-1,0,0,-1,-1,-1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,-1,0,0,-1,1,1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 2);
                         }
                         break;
                 }
@@ -611,24 +1407,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [2,0,1,-1,0,0,-1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 4:
                         rotateTest = [0,2,1,1,0,0,1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 3:
                         rotateTest = [-2,0,-1,1,0,0,1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 2:
                         rotateTest = [0,-2,-1,-1,0,0,-1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                 }
@@ -639,24 +1443,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [1,1,0,0,-1,-1,0,-2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,1,0,0,1,-1,2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 3:
                         rotateTest = [-1,-1,0,0,1,1,0,2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 2:
                         rotateTest = [1,-1,0,0,-1,1,-2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                 }
@@ -673,24 +1485,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [1,1,0,0,1,-1,0,-2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,1,0,0,1,1,2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 3:
                         rotateTest = [-1,-1,0,0,-1,1,0,2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 2:
                         rotateTest = [1,-1,0,0,-1,-1,-2,0];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                 }
@@ -701,24 +1521,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [2,1,1,0,0,-1,-1,-2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 1);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,2,0,1,1,0,2,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 1);
                         }
                         break;
                     case 3:
                         rotateTest = [-2,-1,-1,0,0,1,1,2];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 1);
                         }
                         break;
                     case 2:
                         rotateTest = [1,-2,0,-1,-1,0,-2,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckI(rotateTest, 1);
                         }
                         break;
                 }
@@ -729,24 +1557,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [2,0,1,1,0,0,-1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 4:
                         rotateTest = [0,2,-1,1,0,0,1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 3:
                         rotateTest = [-2,0,-1,-1,0,0,1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 2:
                         rotateTest = [0,-2,1,-1,0,0,-1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                 }
@@ -757,24 +1593,32 @@ class Sprint extends Phaser.Scene {
                         rotateTest = [1,1,0,0,1,-1,-1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 4);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 4:
                         rotateTest = [-1,1,0,0,1,1,1,-1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 3);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 3:
                         rotateTest = [-1,-1,0,0,-1,1,1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 2);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                     case 2:
                         rotateTest = [1,-1,0,0,-1,-1,-1,1];
                         if(this.rotateCheck(rotateTest)) {
                             this.rotateConfirm(rotateTest, 1);
+                        }else {
+                            this.superRotationCheckJLSZT(rotateTest, 1);
                         }
                         break;
                 }
@@ -836,6 +1680,7 @@ class Sprint extends Phaser.Scene {
             }
         }
        
+        holdLimit = 0;
         this.initializePiece();
 
     }
@@ -845,6 +1690,8 @@ class Sprint extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet('skin', 'assets/skin.png', { frameWidth: 24, frameHeight: 24 });
+        this.load.spritesheet('skinghost', 'assets/skinghost.png', { frameWidth: 24, frameHeight: 24 });
+        this.load.spritesheet('preview','assets/preview.png', { frameWidth: 96, frameHeight: 48 });
     }
 
     create() {
@@ -860,20 +1707,24 @@ class Sprint extends Phaser.Scene {
         this.key_C = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
         this.key_X = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         this.key_Z = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+        this.key_SHIFT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
 
         //Text
-        textFPS = this.add.text(400,20,game.loop.actualFps, {font:"20px Arial"});
-        textKeyLeftPressed = this.add.text(400,60,inputLeft, {font:"20px Arial"});
-        textKeyRightPressed = this.add.text(400,80,inputRight, {font:"20px Arial"});
-        textKeyDownPressed = this.add.text(400,100,inputDown, {font:"20px Arial"});
-        textGravityCounter = this.add.text(400,120,gravityCounter, {font:"20px Arial"});
-        textLockCounter = this.add.text(400,140,lockCounter, {font:"20px Arial"});
-        textLockActions = this.add.text(400,160,lockActions, {font:"20px Arial"});
-        textHardDropPressed = this.add.text(400,180,inputHardDrop, {font:"20px Arial"});
-        textRotCWPressed = this.add.text(400,200,inputRotCW, {font:"20px Arial"});
-        textRotCCWPressed = this.add.text(400,220,inputRotCCW, {font:"20px Arial"});
-        textRotState = this.add.text(400,240,rotState, {font:"20px Arial"});
+        textFPS = this.add.text(540,20,game.loop.actualFps, {font:"20px Arial"});
+        textKeyLeftPressed = this.add.text(540,60,inputLeft, {font:"20px Arial"});
+        textKeyRightPressed = this.add.text(540,80,inputRight, {font:"20px Arial"});
+        textKeyDownPressed = this.add.text(540,100,inputDown, {font:"20px Arial"});
+        textGravityCounter = this.add.text(540,120,gravityCounter, {font:"20px Arial"});
+        textLockCounter = this.add.text(540,140,lockCounter, {font:"20px Arial"});
+        textLockActions = this.add.text(540,160,lockActions, {font:"20px Arial"});
+        textHardDropPressed = this.add.text(540,180,inputHardDrop, {font:"20px Arial"});
+        textRotCWPressed = this.add.text(540,200,inputRotCW, {font:"20px Arial"});
+        textRotCCWPressed = this.add.text(540,220,inputRotCCW, {font:"20px Arial"});
+        textRotState = this.add.text(540,240,rotState, {font:"20px Arial"});
+        textNextQueue = this.add.text(540,260,nextPiece1, {font:"20px Arial"});
+        textHold = this.add.text(540,280,holdPiece, {font:"20px Arial"});
+        textTutorial = this.add.text(540, 400, "CONTROLS:\nLeft Arrow: Move Left\nRight Arrow: Move Right\nDown Arrow: Soft Drop\nZ: Rotate Counter Clockwise\nX: Rotate Clockwise\nC: Hard Drop\nShift: Hold", {font:"20px Arial"});
        
     }
 
@@ -891,6 +1742,26 @@ class Sprint extends Phaser.Scene {
                 this.imageGroup.add(image);
             }
         }
+        //Ghost
+        let ghostCheck = 0;
+        while(block[1]+ghostCheck < 22 &&
+              block[3]+ghostCheck < 22 &&
+              block[5]+ghostCheck < 22 &&
+              block[7]+ghostCheck < 22 &&
+              grid[block[1]+ghostCheck+1][block[2]] == 0 &&
+              grid[block[3]+ghostCheck+1][block[4]] == 0 &&
+              grid[block[5]+ghostCheck+1][block[6]] == 0 &&
+              grid[block[7]+ghostCheck+1][block[8]] == 0) {
+            ghostCheck++;
+        }
+        var imageBlock = this.add.image(imageGridXPos+(24*block[2]),imageGridYPos+(24*(block[1]+ghostCheck)), 'skinghost', block[0]);
+        this.imageGroup.add(imageBlock);
+        var imageBlock = this.add.image(imageGridXPos+(24*block[4]),imageGridYPos+(24*(block[3]+ghostCheck)), 'skinghost', block[0]);
+        this.imageGroup.add(imageBlock);
+        var imageBlock = this.add.image(imageGridXPos+(24*block[6]),imageGridYPos+(24*(block[5]+ghostCheck)), 'skinghost', block[0]);
+        this.imageGroup.add(imageBlock);
+        var imageBlock = this.add.image(imageGridXPos+(24*block[8]),imageGridYPos+(24*(block[7]+ghostCheck)), 'skinghost', block[0]);
+        this.imageGroup.add(imageBlock);
         //Block
         if(block[1] > 2) {
             var imageBlock = this.add.image(imageGridXPos+(24*block[2]),imageGridYPos+(24*block[1]), 'skin', block[0]);
@@ -908,6 +1779,21 @@ class Sprint extends Phaser.Scene {
             var imageBlock = this.add.image(imageGridXPos+(24*block[8]),imageGridYPos+(24*block[7]), 'skin', block[0]);
             this.imageGroup.add(imageBlock);
         }
+        //Next
+        var image = this.add.image(imageGridXPos+(imageBlockSize*12),imageGridYPos+(imageBlockSize*4), 'preview', nextPiece1);
+        this.imageGroup.add(image);
+        var image = this.add.image(imageGridXPos+(imageBlockSize*12),imageGridYPos+(imageBlockSize*7), 'preview', nextPiece2);
+        this.imageGroup.add(image);
+        var image = this.add.image(imageGridXPos+(imageBlockSize*12),imageGridYPos+(imageBlockSize*10), 'preview', nextPiece3);
+        this.imageGroup.add(image);
+        var image = this.add.image(imageGridXPos+(imageBlockSize*12),imageGridYPos+(imageBlockSize*13), 'preview', nextPiece4);
+        this.imageGroup.add(image);
+        var image = this.add.image(imageGridXPos+(imageBlockSize*12),imageGridYPos+(imageBlockSize*16), 'preview', nextPiece5);
+        this.imageGroup.add(image);
+        //Hold
+        var image = this.add.image(imageGridXPos+(imageBlockSize*-3),imageGridYPos+(imageBlockSize*4), 'preview', holdPiece);
+        this.imageGroup.add(image);
+        
 
 
         //TEXT
@@ -924,6 +1810,8 @@ class Sprint extends Phaser.Scene {
         textLockCounter.setText('Lock Counter: ' + lockCounter);
         textLockActions.setText('Lock Actions: ' + lockActions);
         textRotState.setText('Rotation State: ' + rotState);
+        textNextQueue.setText("Next Pieces: " + nextPiece1 + ", " + nextPiece2 + ", " + nextPiece3 + ", " + nextPiece4 + ", " + nextPiece5);
+        textHold.setText("Hold Piece: " + holdPiece);
 
     }
 
