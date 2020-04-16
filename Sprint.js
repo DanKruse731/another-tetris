@@ -47,6 +47,16 @@ var nextArray = new Array(7);
 var holdPiece = 0;
 var holdLimit = 0;
 
+//Statistics
+var score = 0;
+var actionType = "";
+var linesClearedAtOnce = 0;
+var tSpin = 0;
+var combo = 0;
+var backToBack = 0;
+var level = 1;
+var finalSRS = 0;
+
 //Image
 var imageBlockSize = 24;
 var imageGridXPos = 160;
@@ -54,19 +64,14 @@ var imageGridYPos = 10;
 
 //Text
 var textFPS;
-var textKeyLeftPressed;
-var textKeyRightPressed;
-var textKeyDownPressed;
-var textHardDropPressed;
-var textRotCWPressed;
-var textRotCCWPressed;
-var textGravityCounter;
-var textLockCounter;
-var textLockActions;
-var textRotState;
-var textNextQueue;
-var textHold;
-var textTutorial
+var textTutorial;
+var textScore;
+var textActionType;
+var textLinesClearedAtOnce;
+var textTSpin;
+var textCombo;
+var textBackToBack;
+var textFinalSRS;
 
 //-------------------------------------------
 class Sprint extends Phaser.Scene {
@@ -232,6 +237,7 @@ class Sprint extends Phaser.Scene {
         gravityCounter = gravityLevel + 1;
         lockActions = 0;
         rotState = 1;
+        tSpin = 0;
 
         if(grid[block[1]][block[2]] > 0 ||
            grid[block[3]][block[4]] > 0 ||
@@ -358,6 +364,8 @@ class Sprint extends Phaser.Scene {
                 block[3]++;
                 block[5]++;
                 block[7]++;
+                tSpin = 0;
+                score += 2;
 
             }
             this.placeBlock();
@@ -386,24 +394,31 @@ class Sprint extends Phaser.Scene {
                         if(softDropSpeed == 0) {
                             for(let i = 0; i < grid.length; i++) {
                                 this.moveDown();
+                                score++;
                             }
                             this.moveDown();
+                            score++;
                         } else {
                             this.moveDown();
+                            score++;
                         }
                         break;
                     case (inputDown > 1 && softDropSpeed < 2):
                         if(softDropSpeed == 0) {
                             for(let i = 0; i < grid.length; i++) {
                                 this.moveDown();
+                                score++;
                             }
                             this.moveDown();
+                            score++;
                         } else {
                             this.moveDown();
+                            score++;
                         }
                         break;
                     case (softDropSpeed > 1 && inputDown % softDropSpeed == 1):
                         this.moveDown();
+                        score++;
                         break;
                 }
             } else {
@@ -431,6 +446,7 @@ class Sprint extends Phaser.Scene {
                 block[4]--;
                 block[6]--;
                 block[8]--;
+                tSpin = 0;
 
                 if(lockCounter > 0) {
                     lockActions++;
@@ -449,6 +465,7 @@ class Sprint extends Phaser.Scene {
                 block[4]++;
                 block[6]++;
                 block[8]++;
+                tSpin = 0;
 
                 if(lockCounter > 0) {
                 lockActions++;
@@ -467,6 +484,7 @@ class Sprint extends Phaser.Scene {
                     block[3]++;
                     block[5]++;
                     block[7]++;
+                    tSpin = 0;
                 }
             }
         }
@@ -506,6 +524,77 @@ class Sprint extends Phaser.Scene {
             lockCounter = 0;
             lockActions++;
         }
+        if(block[0] == 7) {
+            this.tSpinCheck();
+        }
+    }
+
+    tSpinCheck() {
+        let frontFill = 0;
+        let backFill = 0;
+        tSpin = 0;
+
+        /*
+            T-SPIN CHECK
+            ==========================================================================
+            3 Filled Corners required for a T-Spin / T-Spin Mini
+            Regular T-Spin: Either 2 front corners must be filled or used final SRS check.
+        */
+
+        switch(rotState) {
+            case 1:
+                if(block[3]+1 > 22) { backFill = 2; }
+                else {
+                    if(grid[block[3]+1][block[4]-1] > 0) { backFill++; }
+                    if(grid[block[3]+1][block[4]+1] > 0) { backFill++; }
+                }
+                if(grid[block[3]-1][block[4]-1] > 0) { frontFill++; }
+                if(grid[block[3]-1][block[4]+1] > 0) { frontFill++; }
+
+                if(frontFill + backFill >= 3) { tSpin = 1; 
+                if(frontFill == 2 || finalSRS == 1) { tSpin = 2; }}
+                break;
+            case 2:
+                if(block[4]-1 < 0) { backFill = 2; }
+                else {
+                    if(grid[block[3]-1][block[4]-1] > 0) { backFill++; }
+                    if(grid[block[3]+1][block[4]-1] > 0) { backFill++; }
+                }
+                if(grid[block[3]-1][block[4]+1] > 0) { frontFill++; }
+                if(grid[block[3]+1][block[4]+1] > 0) { frontFill++; }
+    
+                if(frontFill + backFill >= 3) { tSpin = 1; 
+                if(frontFill == 2 || finalSRS == 1) { tSpin = 2; }}
+                break;
+            case 3:
+                if(block[3]-1 < 0) { backFill = 2; }
+                else {
+                    if(grid[block[3]-1][block[4]-1] > 0) { backFill++; }
+                    if(grid[block[3]-1][block[4]+1] > 0) { backFill++; }
+                }
+                if(grid[block[3]+1][block[4]-1] > 0) { frontFill++; }
+                if(grid[block[3]+1][block[4]+1] > 0) { frontFill++; }
+        
+                if(frontFill + backFill >= 3) { tSpin = 1; 
+                if(frontFill == 2 || finalSRS == 1) { tSpin = 2; }}
+                break;
+            case 4:
+                if(block[4]+1 > 9) { backFill = 2; }
+                else {
+                    if(grid[block[3]-1][block[4]+1] > 0) { backFill++; }
+                    if(grid[block[3]+1][block[4]+1] > 0) { backFill++; }
+                }
+                if(grid[block[3]-1][block[4]-1] > 0) { frontFill++; }
+                if(grid[block[3]+1][block[4]-1] > 0) { frontFill++; }
+            
+                if(frontFill + backFill >= 3) { tSpin = 1; 
+                if(frontFill == 2 || finalSRS == 1) { tSpin = 2; }}
+                break;
+        }
+
+
+
+
     }
 
     superRotationCheckJLSZT(superRotTest, rotDir) {
@@ -521,6 +610,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]++;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 4);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]--;
                             superRotTest[2]--;
@@ -528,6 +618,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]--;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 4);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] += 3;
                                 superRotTest[1]--;
@@ -539,6 +630,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]--;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 4);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]++;
                                     superRotTest[3]++;
@@ -546,6 +638,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]++;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 4);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -558,6 +651,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]++;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 1);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]++;
                             superRotTest[2]++;
@@ -565,6 +659,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]++;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 1);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] -= 3;
                                 superRotTest[1]--;
@@ -576,6 +671,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]--;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 1);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]++;
                                     superRotTest[3]++;
@@ -583,6 +679,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]++;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 1);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -595,6 +692,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]--;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 2);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]--;
                             superRotTest[2]--;
@@ -602,6 +700,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]--;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 2);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] += 3;
                                 superRotTest[1]++;
@@ -613,6 +712,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]++;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 2);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]--;
                                     superRotTest[3]--;
@@ -620,6 +720,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]--;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 2);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -632,6 +733,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]--;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 3);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]++;
                             superRotTest[2]++;
@@ -639,6 +741,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]++;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 3);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] -= 3;
                                 superRotTest[1]++;
@@ -650,6 +753,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]++;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 3);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]--;
                                     superRotTest[3]--;
@@ -657,6 +761,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]--;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 3);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -676,6 +781,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]--;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 2);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]--;
                             superRotTest[2]--;
@@ -683,6 +789,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]--;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 2);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] += 3;
                                 superRotTest[1]++;
@@ -694,6 +801,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]++;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 2);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]--;
                                     superRotTest[3]--;
@@ -701,6 +809,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]--;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 2);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -713,6 +822,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]++;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 3);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]++;
                             superRotTest[2]++;
@@ -720,6 +830,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]++;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 3);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] -= 3;
                                 superRotTest[1]--;
@@ -731,6 +842,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]--;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 3);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]++;
                                     superRotTest[3]++;
@@ -738,6 +850,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]++;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 3);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -750,6 +863,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]++;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 4);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]--;
                             superRotTest[2]--;
@@ -757,6 +871,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]--;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 4);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] += 3;
                                 superRotTest[1]--;
@@ -768,6 +883,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]--;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 4);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]++;
                                     superRotTest[3]++;
@@ -775,6 +891,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]++;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 4);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -787,6 +904,7 @@ class Sprint extends Phaser.Scene {
                         superRotTest[7]--;
                         if(this.rotateCheck(superRotTest)) {
                             this.rotateConfirm(superRotTest, 1);
+                            finalSRS = 0;
                         } else {
                             superRotTest[0]++;
                             superRotTest[2]++;
@@ -794,6 +912,7 @@ class Sprint extends Phaser.Scene {
                             superRotTest[6]++;
                             if(this.rotateCheck(superRotTest)) {
                                 this.rotateConfirm(superRotTest, 1);
+                                finalSRS = 0;
                             } else {
                                 superRotTest[0] -= 3;
                                 superRotTest[1]++;
@@ -805,6 +924,7 @@ class Sprint extends Phaser.Scene {
                                 superRotTest[7]++;
                                 if(this.rotateCheck(superRotTest)) {
                                     this.rotateConfirm(superRotTest, 1);
+                                    finalSRS = 0;
                                 } else {
                                     superRotTest[1]--;
                                     superRotTest[3]--;
@@ -812,6 +932,7 @@ class Sprint extends Phaser.Scene {
                                     superRotTest[7]--;
                                     if(this.rotateCheck(superRotTest)) {
                                         this.rotateConfirm(superRotTest, 1);
+                                        finalSRS = 1;
                                     }
                                 }
                             }
@@ -1169,6 +1290,7 @@ class Sprint extends Phaser.Scene {
     }
 
     rotateClockwise() {
+        finalSRS = 0;
         let rotateTest = new Array(8);
         switch(block[0]) {
             case 1:
@@ -1399,6 +1521,7 @@ class Sprint extends Phaser.Scene {
     }
 
     rotateCounterClockwise() {
+        finalSRS = 0;
         let rotateTest = new Array(8);
         switch(block[0]) {
             case 1:
@@ -1637,7 +1760,7 @@ class Sprint extends Phaser.Scene {
 
     scanGrid() {
 
-        
+        linesClearedAtOnce = 0;
 
         for(let i = 22; i > 0; i--) {
 
@@ -1660,6 +1783,7 @@ class Sprint extends Phaser.Scene {
                     grid[0][m] = 0;
                 }
                 i++;
+                linesClearedAtOnce++;
             }
 
         }
@@ -1678,10 +1802,124 @@ class Sprint extends Phaser.Scene {
             for(let m = 0; m < grid[0].length; m++) {
                 grid[0][m] = 0;
             }
+            linesClearedAtOnce++;
         }
        
+        this.addScore();
         holdLimit = 0;
         this.initializePiece();
+
+    }
+
+    addScore() {
+
+        switch(linesClearedAtOnce) {
+            case 0:
+                switch(tSpin) {
+                    case 0:
+                        actionType = "";
+                        break;
+                    case 1:
+                        actionType = "T-Spin Mini";
+                        score += 100*level;
+                        break;
+                    case 2:
+                        actionType = "T-Spin";
+                        score += 400*level;
+                        break;
+                }
+                combo = 0;
+                break;
+            case 1:
+                switch(tSpin) {
+                    case 0:
+                        actionType = "Single";    
+                        score += 100*level;
+                        backToBack = 0;
+                        break;
+                    case 1:
+                        actionType = "T-Spin Mini Single";
+                        if(backToBack == 1) {
+                            score += 300*level;
+                        } else {
+                            score += 200*level;
+                        }
+                        backToBack = 1;
+                        break;
+                    case 2:
+                        actionType = "T-Spin Single";
+                        if(backToBack == 1) {
+                            score += 1200*level;
+                        } else {
+                            score += 800*level;
+                        }
+                        backToBack = 1;
+                        break;
+                }
+                combo++;
+                break;
+            case 2:
+                switch(tSpin) {
+                    case 0:
+                        actionType = "Double";    
+                        score += 300*level;
+                        backToBack = 0;
+                        break;
+                    case 1:
+                        actionType = "T-Spin Mini Double";
+                        if(backToBack == 1) {
+                            score += 600*level;
+                        } else {
+                            score += 400*level;
+                        }
+                        backToBack = 1;
+                        break;
+                    case 2:
+                        actionType = "T-Spin Double";
+                        if(backToBack == 1) {
+                            score += 1800*level;
+                        } else {
+                            score += 1200*level;
+                        }
+                        backToBack = 1;
+                        break;
+                }
+                combo++;
+                break;
+            case 3:
+                switch(tSpin) {
+                    case 0:
+                        actionType = "Triple";    
+                        score += 500*level;
+                        backToBack = 0;
+                        break;
+                    case 2:
+                        actionType = "T-Spin Triple";
+                        if(backToBack == 1) {
+                            score += 2400*level;
+                        } else {
+                            score += 1600*level;
+                        }
+                        backToBack = 1;
+                        break;
+                }
+                combo++;
+                break;
+            case 4:
+                actionType = "Tetris";
+                if(backToBack == 1) {
+                    score += 1200*level;
+                } else {
+                    score += 800*level;
+                }
+                backToBack = 1;
+                combo++;
+                break;
+        }
+
+        if(combo > 1) {
+            score += 50*(combo-1)*level;
+        }
 
     }
 
@@ -1712,20 +1950,15 @@ class Sprint extends Phaser.Scene {
 
         //Text
         textFPS = this.add.text(540,20,game.loop.actualFps, {font:"20px Arial"});
-        textKeyLeftPressed = this.add.text(540,60,inputLeft, {font:"20px Arial"});
-        textKeyRightPressed = this.add.text(540,80,inputRight, {font:"20px Arial"});
-        textKeyDownPressed = this.add.text(540,100,inputDown, {font:"20px Arial"});
-        textGravityCounter = this.add.text(540,120,gravityCounter, {font:"20px Arial"});
-        textLockCounter = this.add.text(540,140,lockCounter, {font:"20px Arial"});
-        textLockActions = this.add.text(540,160,lockActions, {font:"20px Arial"});
-        textHardDropPressed = this.add.text(540,180,inputHardDrop, {font:"20px Arial"});
-        textRotCWPressed = this.add.text(540,200,inputRotCW, {font:"20px Arial"});
-        textRotCCWPressed = this.add.text(540,220,inputRotCCW, {font:"20px Arial"});
-        textRotState = this.add.text(540,240,rotState, {font:"20px Arial"});
-        textNextQueue = this.add.text(540,260,nextPiece1, {font:"20px Arial"});
-        textHold = this.add.text(540,280,holdPiece, {font:"20px Arial"});
         textTutorial = this.add.text(540, 400, "CONTROLS:\nLeft Arrow: Move Left\nRight Arrow: Move Right\nDown Arrow: Soft Drop\nZ: Rotate Counter Clockwise\nX: Rotate Clockwise\nC: Hard Drop\nShift: Hold", {font:"20px Arial"});
-       
+        textScore = this.add.text(540,100,score, {font:"20px Arial"});
+        textActionType = this.add.text(540,120,actionType, {font:"20px Arial"});
+        textLinesClearedAtOnce = this.add.text(540,140,linesClearedAtOnce, {font:"20px Arial"});
+        textTSpin = this.add.text(540,160,tSpin, {font:"20px Arial"});
+        textCombo = this.add.text(540,180,combo, {font:"20px Arial"});
+        textBackToBack = this.add.text(540,200,backToBack, {font:"20px Arial"});
+        textFinalSRS = this.add.text(540,220,finalSRS, {font:"20px Arial"});
+
     }
 
     draw() {
@@ -1800,18 +2033,17 @@ class Sprint extends Phaser.Scene {
         //----------------------------------------------------------------------------
 
         textFPS.setText('FPS: ' + game.loop.actualFps);
-        textKeyLeftPressed.setText('Key Left Pressed: ' + inputLeft);
-        textKeyRightPressed.setText('Key Right Pressed: ' + inputRight);
-        textKeyDownPressed.setText('Key Down Pressed: ' + inputDown);
-        textHardDropPressed.setText('Hard Drop Pressed: ' + inputHardDrop);
-        textRotCWPressed.setText('Rotate Clockwise: ' + inputRotCW);
-        textRotCCWPressed.setText('Rotate Counter Clockwise: ' + inputRotCCW);
-        textGravityCounter.setText('Gravity Counter: ' + gravityCounter);
-        textLockCounter.setText('Lock Counter: ' + lockCounter);
-        textLockActions.setText('Lock Actions: ' + lockActions);
-        textRotState.setText('Rotation State: ' + rotState);
-        textNextQueue.setText("Next Pieces: " + nextPiece1 + ", " + nextPiece2 + ", " + nextPiece3 + ", " + nextPiece4 + ", " + nextPiece5);
-        textHold.setText("Hold Piece: " + holdPiece);
+        textScore.setText("Score: " + score);
+        textActionType.setText("Action: " + actionType);
+        textLinesClearedAtOnce.setText("Lines Cleared At Once: " + linesClearedAtOnce);
+        textTSpin.setText("T-Spin: " + tSpin);
+        if(combo < 2) {
+            textCombo.setText("Combo: " + 0);
+        } else {
+            textCombo.setText("Combo: " + (combo-1));
+        }
+        textFinalSRS.setText("Final SRS: " + finalSRS);
+        textBackToBack.setText("Back-to-Back: " + backToBack);
 
     }
 
