@@ -1,0 +1,10 @@
+CREDITS
+===========================
+Programmer - Dan Kruse
+Graphics (Except the backgrounds) - Dan Kruse
+Sound Effects - Tetris Attack, EarthBound (Nintendo)
+Original Tetris Concept - Alexey Pajitnov
+
+DISCLAIMER
+===========================
+This is a non-profit fanmade project. I do not take ownership of the assets created by others. Tetris and its game-play is Copyrighted by Tetris Holding.

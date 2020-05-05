@@ -86,11 +86,11 @@ var textAction;
 var textFlash;
 
 //-------------------------------------------
-class Sprint extends Phaser.Scene {
+class Ultra extends Phaser.Scene {
 
     
     constructor() {
-        super({key:"Sprint"});
+        super({key:"Ultra"});
     }
     
 
@@ -155,7 +155,7 @@ class Sprint extends Phaser.Scene {
         level = 1;
         finalSRS = 0;
         linesCleared = 0;
-        framesElapsed = 0;
+        framesElapsed = 10800;
         win = 0;
 
         //Text Flash
@@ -319,6 +319,10 @@ class Sprint extends Phaser.Scene {
     }
 
     update(delta) {
+        if(framesElapsed < 0) {
+            gameRunning = false;
+            win = 1;
+        }
         if(gameRunning) {
             if(gameCountdown) {
                 this.countdown();
@@ -329,7 +333,7 @@ class Sprint extends Phaser.Scene {
             this.inputs();
             this.execution();
             this.draw();
-            framesElapsed++;
+            framesElapsed--;
             }
         } else {
             if(win == 1) {
@@ -1894,11 +1898,6 @@ class Sprint extends Phaser.Scene {
         }
        
         this.addScore();
-        //WIN CONDITION
-        if(linesCleared >= 40) {
-            win = 1;
-            gameRunning = false;
-        }
 
         holdLimit = 0;
         this.initializePiece();
@@ -2175,6 +2174,7 @@ class Sprint extends Phaser.Scene {
             this.scene.start("Menu");
         })
 
+        
 
         //Backgrounds
         this.add.image(400,300,'background');
@@ -2194,12 +2194,11 @@ class Sprint extends Phaser.Scene {
         this.key_P = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
         //Text
-        textMode = this.add.text(20,200,"SPRINT", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FF88FF"});
+        textMode = this.add.text(20,200,"ULTRA", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FF88FF"});
         textScore = this.add.text(20,240,score, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textLinesCleared = this.add.text(20,280,linesCleared, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textLevel = this.add.text(20,320,level, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textTimer = this.add.text(20,360,"Time: 0:00.00", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
-        textLinesRemaining = this.add.text(590,450,(40-linesCleared), {font:"120px Arial", stroke:"#000000", strokeThickness:12, fill:"#FFFFFF"});
         textPaused = this.add.text(350,10,"", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textAction = this.add.text(20,400,actionType, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#00FFFF"});
         
@@ -2285,10 +2284,9 @@ class Sprint extends Phaser.Scene {
         //TEXT
         //----------------------------------------------------------------------------
         textScore.setText("Score: " + score);
-        textLinesCleared.setText("Lines Cleared: " + linesCleared);
+        textLinesCleared.setText("Lines: " + linesCleared);
         textLevel.setText("Level: " + level);
         textTimer.setText("Time: " + this.convertTime(framesElapsed));
-        textLinesRemaining.setText((linesCleared > 40) ? 0 : (40 - linesCleared));
         if(textFlash > 0) {
             textAction.setText(actionType);
             textFlash--;

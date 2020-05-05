@@ -1,0 +1,44 @@
+	body {
+		
+		background-color:black;
+		font-family:'Tahoma';
+		
+	}
+
+	h1 {
+		
+		color:white;
+		text-align:center;
+		background: rgb(2,0,36);
+		background: linear-gradient(0deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+		width: 100%;
+
+	}
+
+	h2 {
+		color:white;
+		text-align:center;
+	}
+	
+
+	p {
+		color:white;
+	}
+
+	table {
+		margin-left:auto;
+		margin-right:auto;
+	}
+
+	table, tr, th, td {
+		color:white;
+		border:1px solid white;
+		font-family:'Tahoma';
+	}
+
+	th, td {
+		text-align:center;
+		padding:10px;
+		font-family:'Tahoma';
+	}
+	

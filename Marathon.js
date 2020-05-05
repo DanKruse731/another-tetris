@@ -65,6 +65,11 @@ var linesCleared = 0;
 var framesElapsed = 0;
 var win = 0;
 
+//Level Data
+var levelGravity = [48, 38, 28, 22, 16, 12, 8, 6, 4, 3, 2, 1, 0, 0, 0];
+var levelGravitySkip = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3];
+var levelGravityLock = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30];
+
 //Image
 var imageBlockSize = 24;
 var imageGridXPos = 292;
@@ -79,18 +84,17 @@ var textLinesCleared;
 var textLevel;
 var textTimer;
 var textMode;
-var textLinesRemaining;
 var textPaused;
 var textAction;
 
 var textFlash;
 
 //-------------------------------------------
-class Sprint extends Phaser.Scene {
+class Marathon extends Phaser.Scene {
 
     
     constructor() {
-        super({key:"Sprint"});
+        super({key:"Marathon"});
     }
     
 
@@ -123,11 +127,11 @@ class Sprint extends Phaser.Scene {
 
         //Gravity, DAS, Lock
         gravityCounter = 0;
-        gravityLevel = 48;
-        gravitySkip = 1;
+        gravityLevel = levelGravity[0];
+        gravitySkip = levelGravitySkip[0];
 
         lockCounter = 0;
-        lockLevel = 30;
+        lockLevel = levelGravityLock[0];
         lockActions = 0;
 
         //Rotation
@@ -505,7 +509,7 @@ class Sprint extends Phaser.Scene {
                 }
             } else {
 
-                if(gravityCounter > gravityLevel) {
+                if(gravityCounter >= gravityLevel) {
                     this.moveDown();
                     gravityCounter = 0;
                 } else {
@@ -1895,9 +1899,18 @@ class Sprint extends Phaser.Scene {
        
         this.addScore();
         //WIN CONDITION
-        if(linesCleared >= 40) {
+        if(linesCleared >= 150) {
             win = 1;
             gameRunning = false;
+        } else {
+            if(linesCleared >= level*10) {
+                this.soundFX = this.sound.add("lvlup");
+                this.soundFX.play();
+                level++;
+                gravityLevel = levelGravity[level-1];
+                gravitySkip = levelGravitySkip[level-1];
+                lockLevel = levelGravityLock[level-1];
+            }
         }
 
         holdLimit = 0;
@@ -2146,6 +2159,7 @@ class Sprint extends Phaser.Scene {
         this.load.audio('pause',["assets/sfx/pause.mp3"]);
         this.load.audio('count',["assets/sfx/Countdown.mp3"]);
         this.load.audio('countend',["assets/sfx/Countdown End.mp3"]);
+        this.load.audio('lvlup',["assets/sfx/levelup.wav"]);
     }
 
     create() {
@@ -2175,6 +2189,7 @@ class Sprint extends Phaser.Scene {
             this.scene.start("Menu");
         })
 
+        
 
         //Backgrounds
         this.add.image(400,300,'background');
@@ -2194,12 +2209,11 @@ class Sprint extends Phaser.Scene {
         this.key_P = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
 
         //Text
-        textMode = this.add.text(20,200,"SPRINT", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FF88FF"});
+        textMode = this.add.text(20,200,"MARATHON", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#88FF88"});
         textScore = this.add.text(20,240,score, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textLinesCleared = this.add.text(20,280,linesCleared, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textLevel = this.add.text(20,320,level, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textTimer = this.add.text(20,360,"Time: 0:00.00", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
-        textLinesRemaining = this.add.text(590,450,(40-linesCleared), {font:"120px Arial", stroke:"#000000", strokeThickness:12, fill:"#FFFFFF"});
         textPaused = this.add.text(350,10,"", {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#FFFFFF"});
         textAction = this.add.text(20,400,actionType, {font:"30px Arial", stroke:"#000000", strokeThickness:6, fill:"#00FFFF"});
         
@@ -2285,10 +2299,9 @@ class Sprint extends Phaser.Scene {
         //TEXT
         //----------------------------------------------------------------------------
         textScore.setText("Score: " + score);
-        textLinesCleared.setText("Lines Cleared: " + linesCleared);
+        textLinesCleared.setText("Lines: " + linesCleared);
         textLevel.setText("Level: " + level);
         textTimer.setText("Time: " + this.convertTime(framesElapsed));
-        textLinesRemaining.setText((linesCleared > 40) ? 0 : (40 - linesCleared));
         if(textFlash > 0) {
             textAction.setText(actionType);
             textFlash--;
