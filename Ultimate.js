@@ -126,6 +126,11 @@ class Ultimate extends Phaser.Scene {
         inputHold = 0;
 
         //Gravity, DAS, Lock
+
+        levelGravity = [48, 38, 28, 22, 16, 12, 8, 6, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        levelGravitySkip = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 8, 12, 16, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20];
+        levelGravityLock = [30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10];
+
         gravityCounter = 0;
         gravityLevel = levelGravity[0];
         gravitySkip = levelGravitySkip[0];

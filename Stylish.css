@@ -2,6 +2,7 @@
 		
 		background-color:black;
 		font-family:'Tahoma';
+		color:white;
 		
 	}
 
@@ -42,3 +43,7 @@
 		font-family:'Tahoma';
 	}
 	
+	h3, footer {
+		color:white;
+		text-align:center;
+	}
